@@ -4,7 +4,6 @@ using System.Text;
 namespace AiTech.Tools
 {
 
-
     public class UniqueIdGenerator
     {
         public static string GetUniqueKey()

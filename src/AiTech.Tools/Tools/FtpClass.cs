@@ -46,10 +46,14 @@ namespace AiTech.Tools
             FtpWebRequest requestFTP = (FtpWebRequest)WebRequest.Create(new Uri(new Uri("ftp://" + _FTPServer), FTPAddress + fileInfo.Name));
             // Credentials
             requestFTP.Credentials = _Credential;
+
+
             requestFTP.KeepAlive = false;
             requestFTP.Method = WebRequestMethods.Ftp.UploadFile;
             requestFTP.UseBinary = true;
             requestFTP.ContentLength = fileInfo.Length;
+
+            requestFTP.UsePassive = false;
 
             // The buffer size is set to 2kb, breaking down into 2kb and uploading
             int buffLength = 2048;

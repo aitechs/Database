@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Data;
-using System.Security.Cryptography;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 public class SimpleAES

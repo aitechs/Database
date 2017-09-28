@@ -14,6 +14,7 @@ namespace AiTech.Tools.Winform
             {
                 switch (e.CloseReason)
                 {
+                    case CloseReason.MdiFormClosing:
                     case CloseReason.ApplicationExitCall:
                     case CloseReason.None:
                     case CloseReason.UserClosing:

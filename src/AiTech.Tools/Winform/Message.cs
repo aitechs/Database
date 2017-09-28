@@ -48,14 +48,27 @@ namespace AiTech.Tools.Winform
 
             var stackmsg = ex.Message;
             var stack = ex.StackTrace.Split('\n');
-            if (stack.Length != 0) stackmsg = "Error Details:\n" + stack[0];
+
+            var size = 3;
+
+            if (stack.Length < 3) size = stack.Length;
+
+
+            stackmsg = "Error Details:\n";
+            for (var i = 0; i < size; i++)
+            {
+                stackmsg += stack[i];
+            }
+
+            //if (stack.Length != 0) stackmsg = "Error Details:\n" + stack[0] + "\n";
+
 
             var info = new TaskDialogInfo()
             {
                 Title = "Notification",
                 TaskDialogIcon = eTaskDialogIcon.Stop,
                 DialogButtons = eTaskDialogButton.Ok,
-                Header = "System Error",
+                Header = "Oops! Something went wrong.",
                 Text = error + "\n\n" + stackmsg,
                 FooterText = String.Format("Error Source : {0}.{1} : {2}", formName, caller, ex.Source)
             };

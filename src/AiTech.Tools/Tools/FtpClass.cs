@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -19,7 +20,6 @@ namespace AiTech.Tools
     {
         private readonly NetworkCredential _Credential;
         private FileSystemWatcher _FolderWatcher;
-        private readonly string _FTPServer;
         private readonly ICollection<string> ListOfFiles = new List<string>();
 
         /// <summary>
@@ -31,10 +31,10 @@ namespace AiTech.Tools
         public event EventHandler<cFTPEventHandlerArgs> Progress;
         public event EventHandler<cFTPEventHandlerArgs> Completed;
 
-        public FtpClass(string ServerIP, NetworkCredential credential)
+        public FtpClass(NetworkCredential credential)
         {
-            _FTPServer = ServerIP;
             _Credential = credential;
+
 
         }
 
@@ -43,9 +43,10 @@ namespace AiTech.Tools
         {
             FileInfo fileInfo = new FileInfo(filePath);
 
-            FtpWebRequest requestFTP = (FtpWebRequest)WebRequest.Create(new Uri(new Uri("ftp://" + _FTPServer), FTPAddress + fileInfo.Name));
+            FtpWebRequest requestFTP = (FtpWebRequest)WebRequest.Create("ftp://" + _Credential.Domain + "/" + FTPAddress + "/" + fileInfo.Name);
+
             // Credentials
-            requestFTP.Credentials = _Credential;
+            requestFTP.Credentials = new NetworkCredential(_Credential.UserName, _Credential.Password);
 
 
             requestFTP.KeepAlive = false;
@@ -72,7 +73,7 @@ namespace AiTech.Tools
                     strm.Write(buff, 0, contentLen);
                     contentLen = fs.Read(buff, 0, buffLength);
                     BytesUploaded += contentLen;
-                    OnProgress(new cFTPEventHandlerArgs() { TotalBytes = requestFTP.ContentLength, CompletedBytes = BytesUploaded });
+                    OnProgress(new cFTPEventHandlerArgs() { TotalBytes = fileInfo.Length, CompletedBytes = BytesUploaded });
                 }
                 // Close the file stream and the Request Stream
                 strm.Close();
@@ -88,38 +89,58 @@ namespace AiTech.Tools
             }
         }
 
-        public Boolean DownloadFile(string filePath, string fileName, string FTPAddress, string username, string password)
+
+
+
+        public Boolean DownloadFile(string destinationFolder, string fileName, string ServerFolderPath)
         {
             try
             {
-                FileStream outputStream = new FileStream(filePath + "\\" + fileName, FileMode.Create);
-                var requestFTP = (FtpWebRequest)WebRequest.Create(new Uri("ftp://" + FTPAddress + "/" + fileName));
-                requestFTP.Method = WebRequestMethods.Ftp.DownloadFile;
-                requestFTP.UseBinary = true;
-                requestFTP.Credentials = _Credential;
-                var response = (FtpWebResponse)requestFTP.GetResponse();
-                var ftpStream = response.GetResponseStream();
-                var bufferSize = 2048;
-                byte[] buffer = new byte[bufferSize];
-
-                if (ftpStream != null)
+                using (FileStream outputStream = new FileStream(Path.Combine(destinationFolder, fileName), FileMode.Create))
                 {
-                    var readCount = ftpStream.Read(buffer, 0, bufferSize);
-                    while (readCount > 0)
+
+                    var requestFTP = (FtpWebRequest)WebRequest.Create(new Uri(new Uri("ftp://" + _Credential.Domain), ServerFolderPath + "/" + fileName));
+                    //var requestFTP = (FtpWebRequest)WebRequest.Create(new Uri("ftp://" + FTPAddress + "/" + fileName));
+
+                    requestFTP.Method = WebRequestMethods.Ftp.DownloadFile;
+                    requestFTP.UseBinary = true;
+                    requestFTP.Credentials = new NetworkCredential(_Credential.UserName, _Credential.Password);
+                    requestFTP.UsePassive = false;
+
+                    Debug.WriteLine(requestFTP.RequestUri);
+
+                    var response = (FtpWebResponse)requestFTP.GetResponse();
+                    var ftpStream = response.GetResponseStream();
+                    var bufferSize = 2048;
+                    byte[] buffer = new byte[bufferSize];
+                    long bytesDownloaded = 0;
+
+                    if (ftpStream != null)
                     {
-                        outputStream.Write(buffer, 0, readCount);
-                        readCount = ftpStream.Read(buffer, 0, bufferSize);
+                        var readCount = ftpStream.Read(buffer, 0, bufferSize);
+                        while (readCount > 0)
+                        {
+                            outputStream.Write(buffer, 0, readCount);
+                            readCount = ftpStream.Read(buffer, 0, bufferSize);
+                            bytesDownloaded += readCount;
+
+                            OnProgress(new cFTPEventHandlerArgs() { TotalBytes = requestFTP.ContentLength, CompletedBytes = bytesDownloaded });
+                        }
                     }
+
+                    if (ftpStream != null) ftpStream.Close();
+                    outputStream.Close();
+
+                    response.Close();
                 }
 
-                if (ftpStream != null) ftpStream.Close();
-                outputStream.Close();
-                response.Close();
+                OnCompleted(new cFTPEventHandlerArgs() { FileName = fileName });
+
                 return true;
             }
-            catch (Exception)
+            catch
             {
-                return false;
+                throw;
             }
         }
 

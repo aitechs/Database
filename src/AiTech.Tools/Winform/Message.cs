@@ -41,13 +41,16 @@ namespace AiTech.Tools.Winform
 
         public static void ShowError(Exception ex, Form owner, [CallerMemberName] string caller = "")
         {
+
+            var baseException = ex.GetBaseException();
+
             var error = "\n" + ex.Message + "\n\n" + ex.GetBaseException().Message;
 
             var formName = "";
             if (owner != null) formName = owner.Name;
 
-            var stackmsg = ex.Message;
-            var stack = ex.StackTrace.Split('\n');
+            var stackmsg = baseException.StackTrace;
+            var stack = stackmsg.Split('\n');
 
             var size = 3;
 
@@ -57,7 +60,7 @@ namespace AiTech.Tools.Winform
             stackmsg = "Error Details:\n";
             for (var i = 0; i < size; i++)
             {
-                stackmsg += stack[i];
+                stackmsg += "--> " + stack[i] + "\n\n";
             }
 
             //if (stack.Length != 0) stackmsg = "Error Details:\n" + stack[0] + "\n";
@@ -70,7 +73,7 @@ namespace AiTech.Tools.Winform
                 DialogButtons = eTaskDialogButton.Ok,
                 Header = "Oops! Something went wrong.",
                 Text = error + "\n\n" + stackmsg,
-                FooterText = String.Format("Error Source : {0}.{1} : {2}", formName, caller, ex.Source)
+                FooterText = String.Format("Error Source : {0}.{1} : {2}", formName, caller, baseException.Source)
             };
 
             if (owner == null)

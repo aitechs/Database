@@ -16,7 +16,6 @@ namespace AiTech.Tools.Winform
                 {
                     case CloseReason.MdiFormClosing:
                     case CloseReason.ApplicationExitCall:
-                    case CloseReason.None:
                     case CloseReason.UserClosing:
                         //Check for Dirty
                         if (!frm.DirtyStatus.IsDirty) break;

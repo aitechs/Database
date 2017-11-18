@@ -44,23 +44,40 @@ namespace AiTech.Tools.Winform
 
             var baseException = ex.GetBaseException();
 
-            var error = "\n" + ex.Message + "\n\n" + ex.GetBaseException().Message;
+            var error = "";
+            if (baseException == null)
+            {
+                error = "\n" + baseException.Message;
+                baseException = ex;
+            }
+            else
+            {
+                error = "\n" + baseException.Message + "\n\n" + ex.Message;
+            }
 
             var formName = "";
             if (owner != null) formName = owner.Name;
 
             var stackmsg = baseException.StackTrace;
-            var stack = stackmsg.Split('\n');
 
-            var size = 3;
-
-            if (stack.Length < 3) size = stack.Length;
-
-
-            stackmsg = "Error Details:\n";
-            for (var i = 0; i < size; i++)
+            if (stackmsg != null)
             {
-                stackmsg += "--> " + stack[i] + "\n\n";
+                var stack = stackmsg.Split('\n');
+
+                var size = 3;
+
+                if (stack.Length < 3) size = stack.Length;
+
+
+                stackmsg = "Error Details:\n";
+                for (var i = 0; i < size; i++)
+                {
+                    stackmsg += "--> " + stack[i] + "\n\n";
+                }
+            }
+            else
+            {
+                stackmsg = "No Error Details";
             }
 
             //if (stack.Length != 0) stackmsg = "Error Details:\n" + stack[0] + "\n";
@@ -128,7 +145,7 @@ namespace AiTech.Tools.Winform
                 TaskDialogIcon = eTaskDialogIcon.Help,
                 DialogButtons = eTaskDialogButton.Ok,
                 Header = "Delete Record",
-                Text = $"You are about to <font color='red'><b>DELETE</b></font> record? <br/><br/>{msg}<br/><br/> Do you want to continue?",
+                Text = $"This action will <font color='red'><b>DELETE</b></font> record.<br/><br/>{msg}<br/><br/> Do you want to continue?",
                 DefaultButton = eTaskDialogButton.No
             };
             info.DialogButtons = eTaskDialogButton.Yes | eTaskDialogButton.No;
@@ -237,10 +254,16 @@ namespace AiTech.Tools.Winform
         /// <param name="focusControl"></param>
         public static void ShowValidationError(Control control, string errorMessage, ErrorProvider errorProvider = null, Highlighter highlighter = null, int topMargin = 5, bool focusControl = true)
         {
-            ToastNotification.DefaultToastGlowColor = eToastGlowColor.Red;
+            //ToastNotification.DefaultToastGlowColor = eToastGlowColor.Red;
+            //ToastNotification.DefaultToastPosition = eToastPosition.TopCenter;
             ToastNotification.ToastMargin.Top = topMargin;
 
-            ToastNotification.Show(control.FindForm(), errorMessage, eToastPosition.TopCenter);
+            ToastNotification.Show(control.FindForm(),
+                                    errorMessage,
+                                    Resources.High_Priority_24px,
+                                    5000,
+                                    eToastGlowColor.Red,
+                                    eToastPosition.TopCenter);
 
             if (errorProvider != null)
                 errorProvider.SetError(control, errorMessage);

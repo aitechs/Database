@@ -5,8 +5,4 @@
         bool FileSave();
         DirtyFormHandler DirtyStatus { get; }
     }
-
-
-
-
 }

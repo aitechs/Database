@@ -27,7 +27,7 @@ namespace AiTech.ToolsTests
 
             var ftp = new FtpClass(credential);
 
-            var testFileName = "downloadtest.jpg";
+            var testFileName = "idms.exe";//"downloadtest.jpg";
             var testFilePath = "d:\\";
 
             Debug.Print("Removing local file if exists");
@@ -37,7 +37,7 @@ namespace AiTech.ToolsTests
 
             Debug.Print("Start downloading File");
 
-            var result = ftp.DownloadFile(testFilePath, testFileName, "/idms/pictures");
+            var result = ftp.DownloadFile(testFilePath, testFileName,"/idms/installer");//"/idms/pictures");
 
             Assert.AreEqual(true, result);
 

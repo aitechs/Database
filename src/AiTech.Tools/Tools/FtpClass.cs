@@ -6,7 +6,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 
-namespace AiTech.Tools
+namespace Winform
 {
     public class cFTPEventHandlerArgs : EventArgs
     {
@@ -111,10 +111,24 @@ namespace AiTech.Tools
             {
                 Debug.WriteLine("Connecting to Server");
 
-                var requestFTP = (FtpWebRequest)WebRequest.Create(new Uri(new Uri("ftp://" + _Credential.Domain), ServerFolderPath + "/" + fileName));
+                var url = new Uri(new Uri("ftp://" + _Credential.Domain), ServerFolderPath + "/" + fileName);
+
+                // Query size of the file to be downloaded
+                // =======================================
+                var sizeRequest = (FtpWebRequest)WebRequest.Create(url);
+                sizeRequest.Credentials = new NetworkCredential(_Credential.UserName, _Credential.Password);
+                sizeRequest.Method = WebRequestMethods.Ftp.GetFileSize;
+
+                var sizeOfFile = sizeRequest.GetResponse().ContentLength;
+
+                //=========================================
+
+
+                var requestFTP = (FtpWebRequest)WebRequest.Create(url);
                 //var requestFTP = (FtpWebRequest)WebRequest.Create(new Uri("ftp://" + FTPAddress + "/" + fileName));
 
                 Debug.WriteLine("Server " + requestFTP.RequestUri);
+                Debug.WriteLine(requestFTP.RequestUri);
 
                 requestFTP.Method = WebRequestMethods.Ftp.DownloadFile;
                 requestFTP.UseBinary = true;
@@ -123,10 +137,9 @@ namespace AiTech.Tools
                 //Use TRUE for Download
                 requestFTP.UsePassive = true;
 
-                Debug.WriteLine(requestFTP.RequestUri);
-
                 var response = (FtpWebResponse)requestFTP.GetResponse();
                 var ftpStream = response.GetResponseStream();
+
                 var bufferSize = 2048;
                 byte[] buffer = new byte[bufferSize];
                 long bytesDownloaded = 0;
@@ -140,7 +153,7 @@ namespace AiTech.Tools
                         readCount = ftpStream.Read(buffer, 0, bufferSize);
                         bytesDownloaded += readCount;
 
-                        OnProgress(new cFTPEventHandlerArgs() { TotalBytes = requestFTP.ContentLength, CompletedBytes = bytesDownloaded });
+                        OnProgress(new cFTPEventHandlerArgs() { TotalBytes = sizeOfFile, CompletedBytes = bytesDownloaded });
                     }
                 }
 
